@@ -1,7 +1,6 @@
 "use client"
 import React, { useEffect, useState } from "react";
 import api from "../../../utils/api";
-import useAuth from "../../../utils/middleware"
 
 interface ProfileData {
   name: string;
@@ -17,7 +16,6 @@ const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-//   useAuth()
 
 useEffect(() => {
   console.log("Remember me token:", document.cookie);
