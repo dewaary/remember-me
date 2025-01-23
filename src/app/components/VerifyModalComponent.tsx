@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../../../utils/api";
+import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 
 interface VerifyCodeModalProps {
@@ -15,31 +17,80 @@ const VerifyCodeModal: React.FC<VerifyCodeModalProps> = ({ isOpen, onClose, qrCo
     const [rememberMe, setRememberMe] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [deviceId, setDeviceId] = useState<string>("");
+    const [ipAddress, setIpAddress] = useState<string>("");
     const router = useRouter();
 
-    console.log("isi user id", userId)
+
+
+    const handleDeviceId = () => {
+      console.log("masuk sini")
+      try {
+        let storedDeviceId = localStorage.getItem("device_id");
+        if (!storedDeviceId) {
+          storedDeviceId = uuidv4();
+        }
+        setDeviceId(storedDeviceId);
+      } catch (error) {
+        console.error("Error handling device ID:", error);
+      }
+    };
   
+    // Function to fetch IP Address
+    const fetchIpAddress = async () => {
+      console.log("masuk sini ipp adreess")
+      try {
+        const { data } = await axios.get("https://api.ipify.org?format=json");
+        console.log("ip address", data.ip);
+        setIpAddress(data.ip);
+      } catch (error) {
+        console.error("Failed to fetch IP address:", error);
+      }
+    };
+
+    useEffect(() => {
+      console.log("useEffect triggered");
+      handleDeviceId();
+      fetchIpAddress();
+    },[])
+
     if (!isOpen) return null;
-  
+
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       setLoading(true);
       setErrorMessage(null);
+      if (rememberMe) {
+        // Jika remember me = true, simpan deviceId dan ipAddress di localStorage
+        localStorage.setItem("device_id", deviceId);
+        localStorage.setItem("ip_address", ipAddress);
+      }
+
+        console.log('Headers yang dikirim:', {
+          "Device-ID": deviceId || "",
+          "X-Forwarded-For": ipAddress || "",
+        });
   
       try {
         const response = await api.post("/verify-code", {
           user_id: userId,
           google2fa_code: code,
           remember_me: rememberMe,
+        }, {
+          headers: {
+            "Device-ID": deviceId || "",
+            "X-Forwarded-For": ipAddress || "", // Opsional untuk memastikan IP
+          },
         });
+
+        if (rememberMe) {
+          // Jika remember me = true, simpan deviceId dan ipAddress di localStorage
+          localStorage.setItem("device_id", deviceId);
+          localStorage.setItem("ip_address", ipAddress);
+        }
   
-        console.log("response", response);
   
         if (response.status === 200) {
-          const { token } = response.data.data;
-  
-          // Save the token to localStorage
-          localStorage.setItem("authToken", token);
   
           alert("Verification successful!");
           onClose();

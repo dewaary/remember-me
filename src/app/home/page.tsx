@@ -25,22 +25,8 @@ useEffect(() => {
     setLoading(true);
     setErrorMessage(null);
 
-    const token = localStorage.getItem("authToken");
-
-    console.log("token", token)
-
-    if (!token) {
-      setErrorMessage("No authentication token found. Please log in.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await api.get("/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get("/profile");
 
       console.log("response", response)
 
