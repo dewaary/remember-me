@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState } from "react";
 import api from "../../../utils/api";
+import axios from "axios";
 
 interface ProfileData {
   name: string;
@@ -31,16 +32,26 @@ useEffect(() => {
       if (response.status === 200) {
         setProfile(response.data.data);
       }
-    } catch (error: any) {
-      console.log("isis error", error)
-      // Periksa jika response mengandung redirect_url
-      if (error.response?.data?.data?.redirect_url) {
-        // Jika ada redirect_url, arahkan user ke halaman login
-        window.location.href = error.response.data.data.redirect_url;
+    } catch (error: unknown) {
+      console.log("isis error", error);
+
+      // Check if the error is an AxiosError
+      if (axios.isAxiosError(error)) {
+        // Periksa jika response mengandung redirect_url
+        if (error.response?.data?.data?.redirect_url) {
+          // Jika ada redirect_url, arahkan user ke halaman login
+          window.location.href = error.response.data.data.redirect_url;
+        } else {
+          setErrorMessage(
+            error.response?.data?.message || "Failed to fetch profile data."
+          );
+        }
+      } else if (error instanceof Error) {
+        // Handle regular JS Error
+        setErrorMessage(error.message || "An error occurred. Please try again.");
       } else {
-        setErrorMessage(
-          error.response?.data?.message || "Failed to fetch profile data."
-        );
+        // Handle unknown error types
+        setErrorMessage("An unknown error occurred. Please try again.");
       }
     } finally {
       setLoading(false);

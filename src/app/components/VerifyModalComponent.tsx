@@ -21,8 +21,6 @@ const VerifyCodeModal: React.FC<VerifyCodeModalProps> = ({ isOpen, onClose, qrCo
     const [ipAddress, setIpAddress] = useState<string>("");
     const router = useRouter();
 
-
-
     const handleDeviceId = () => {
       console.log("masuk sini")
       try {
@@ -96,10 +94,18 @@ const VerifyCodeModal: React.FC<VerifyCodeModalProps> = ({ isOpen, onClose, qrCo
           onClose();
           router.push('/home');
         }
-      } catch (error: any) {
-        setErrorMessage(
-          error.response?.data?.message || "An error occurred. Please try again."
-        );
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          // Handle Axios errors
+          setErrorMessage(
+            error.response?.data?.message || "An error occurred. Please try again."
+          );
+        } else if (error instanceof Error) {
+          // Handle generic JavaScript errors
+          setErrorMessage(error.message || "An error occurred. Please try again.");
+        } else {
+          setErrorMessage("An unknown error occurred. Please try again.");
+        }
       } finally {
         setLoading(false);
       }

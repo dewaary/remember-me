@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import api from '../../../utils/api'
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -33,8 +34,19 @@ const RegisterPage: React.FC = () => {
         setMessage(response.data.message);
       }
 
-    } catch (error: any) {
-      setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        // Handle Axios errors
+        setMessage(
+          error.response?.data?.message || "An error occurred with the request. Please try again."
+        );
+      } else if (error instanceof Error) {
+        // Handle general JavaScript errors (e.g., from throw new Error())
+        setMessage(error.message || "An error occurred. Please try again.");
+      } else {
+        // Handle other types of errors (e.g., unknown types)
+        setMessage("An unknown error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
